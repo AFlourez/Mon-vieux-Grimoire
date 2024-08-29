@@ -8,6 +8,37 @@ const router = express.Router();
 const JWT_SECRET = 'your_jwt_secret_key'; // Change cela pour une clé plus sécurisée en production
 
 // Route POST pour l'inscription
+/**
+ * @swagger
+ * /api/auth/signup:
+ *   post:
+ *     summary: Inscription d'un nouvel utilisateur
+ *     description: Crée un nouveau compte utilisateur avec les informations fournies.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "johndoe"
+ *               email:
+ *                 type: string
+ *                 example: "johndoe@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès
+ *       400:
+ *         description: Informations fournies invalides ou utilisateur déjà existant
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 router.post('/signup', async (req, res) => {
   const { email, password } = req.body;
 
@@ -38,6 +69,42 @@ router.post('/signup', async (req, res) => {
 });
 
 // Route POST pour la connexion
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Connexion d'un utilisateur
+ *     description: Authentifie un utilisateur et renvoie un jeton d'accès.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "johndoe@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Connexion réussie, jeton d'accès renvoyé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNjEyMzQ1NjAwLCJleHBpcmF0aW9uIjoxNjEyMzQ5MjAwfQ.W4vI8O2rP3J6GGfTyUZK1FhuXyYgb8eMm5kN73Zhn2c"
+ *       401:
+ *         description: Échec de l'authentification, email ou mot de passe incorrect
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -76,5 +143,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la connexion', error });
   }
 });
+
 
 module.exports = router;

@@ -5,7 +5,49 @@ const Book = require('../models/Book'); // Importer le modèle Book
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Books
+ *   description: API pour gérer les livres
+ */
+
 // Route POST pour ajouter un livre
+/**
+ * @swagger
+ * /api/books:
+ *   post:
+ *     summary: Ajouter un nouveau livre
+ *     description: Créer un nouveau livre
+ *     tags: [Books]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: The Great Gatsby
+ *               author:
+ *                 type: string
+ *                 example: F. Scott Fitzgerald
+ *               year:
+ *                 type: number
+ *                 example: 1925
+ *               genre:
+ *                 type: string
+ *                 example: Fiction
+ *               imageUrl:
+ *                 type: string
+ *                 example: https://via.placeholder.com/206x260
+ *     responses:
+ *       200:
+ *         description: Livre créé avec succès
+ *       400:
+ *         description: Invalid input
+ */
 router.post('/', authMiddleware, upload.single('image'), (req, res) => {
   console.log('Requête reçue:', req.body);
   console.log('Fichier reçu:', req.file);
@@ -39,6 +81,62 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
   
 
 // Route GET pour récupérer tous les livres
+/**
+ * @swagger
+ * /api/books:
+ *   get:
+ *     summary: Récupère tous les livres
+ *     description: Retourne une liste de livres.
+ *     tags: [Books]
+ *     responses:
+ *       200:
+ *         description: A list of books
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: "4"
+ *                   userId:
+ *                     type: string
+ *                     example: "1"
+ *                   title:
+ *                     type: string
+ *                     example: "Milwaukee Mission"
+ *                   author:
+ *                     type: string
+ *                     example: "Elder Cooper"
+ *                   imageUrl:
+ *                     type: string
+ *                     example: "https://via.placeholder.com/206x260"
+ *                   year:
+ *                     type: number
+ *                     example: 2021
+ *                   genre:
+ *                     type: string
+ *                     example: "Policier"
+ *                   ratings:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         userId:
+ *                           type: string
+ *                           example: "1"
+ *                         grade:
+ *                           type: number
+ *                           example: 5
+ *                   averageRating:
+ *                     type: number
+ *                     example: 4.5
+ *       500:
+ *         description: Internal server error
+ */
+
 router.get('/', async (req, res) => {
   try {
     const books = await Book.find(); // Récupérer tous les livres depuis MongoDB
@@ -49,6 +147,62 @@ router.get('/', async (req, res) => {
 });
 
 // Route GET pour récupérer les 3 livres avec la meilleure note moyenne
+/**
+ * @swagger
+ * /api/books/bestrating:
+ *   get:
+ *     summary: TOP 3 des meilleurs notes
+ *     description: Retrieve a list of the top 3 books with the highest average ratings.
+ *     tags: [Books]
+ *     responses:
+ *       200:
+ *         description: A list of the top 3 books with the highest average ratings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: "4"
+ *                   userId:
+ *                     type: string
+ *                     example: "1"
+ *                   title:
+ *                     type: string
+ *                     example: "Milwaukee Mission"
+ *                   author:
+ *                     type: string
+ *                     example: "Elder Cooper"
+ *                   imageUrl:
+ *                     type: string
+ *                     example: "https://via.placeholder.com/206x260"
+ *                   year:
+ *                     type: number
+ *                     example: 2021
+ *                   genre:
+ *                     type: string
+ *                     example: "Policier"
+ *                   ratings:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         userId:
+ *                           type: string
+ *                           example: "1"
+ *                         grade:
+ *                           type: number
+ *                           example: 5
+ *                   averageRating:
+ *                     type: number
+ *                     example: 4.5
+ *       500:
+ *         description: Internal server error
+ */
+
 router.get('/bestrating', async (req, res) => {
   try {
     const topBooks = await Book.find()
@@ -62,6 +216,69 @@ router.get('/bestrating', async (req, res) => {
 });
 
 // Route GET pour récupérer un livre par ID
+/**
+ * @swagger
+ * /api/books/{id}:
+ *   get:
+ *     summary: Récupère un livre par rapport à une ID
+ *     description: Retourne livre par rapport à l'ID.
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the book to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: The book with the specified ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "4"
+ *                 userId:
+ *                   type: string
+ *                   example: "1"
+ *                 title:
+ *                   type: string
+ *                   example: "Milwaukee Mission"
+ *                 author:
+ *                   type: string
+ *                   example: "Elder Cooper"
+ *                 imageUrl:
+ *                   type: string
+ *                   example: "https://via.placeholder.com/206x260"
+ *                 year:
+ *                   type: number
+ *                   example: 2021
+ *                 genre:
+ *                   type: string
+ *                   example: "Policier"
+ *                 ratings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         example: "1"
+ *                       grade:
+ *                         type: number
+ *                         example: 5
+ *                 averageRating:
+ *                   type: number
+ *                   example: 4.5
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Internal server error
+ */
+
 router.get('/:id', (req, res) => {
   console.log('ID demandé:', req.params.id);
   Book.findOne({ _id: req.params.id })
@@ -76,6 +293,93 @@ router.get('/:id', (req, res) => {
 });
 
 // Route PUT pour mettre à jour un livre
+/**
+ * @swagger
+ * /api/books/{id}:
+ *   put:
+ *     summary: MAJ livre
+ *     description: Update the details of a book if the current user is the creator.
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the book to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "The Great Gatsby"
+ *               author:
+ *                 type: string
+ *                 example: "F. Scott Fitzgerald"
+ *               year:
+ *                 type: number
+ *                 example: 1925
+ *               genre:
+ *                 type: string
+ *                 example: "Fiction"
+ *               imageUrl:
+ *                 type: string
+ *                 example: "https://via.placeholder.com/206x260"
+ *     responses:
+ *       200:
+ *         description: The updated book
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "4"
+ *                 userId:
+ *                   type: string
+ *                   example: "1"
+ *                 title:
+ *                   type: string
+ *                   example: "The Great Gatsby"
+ *                 author:
+ *                   type: string
+ *                   example: "F. Scott Fitzgerald"
+ *                 imageUrl:
+ *                   type: string
+ *                   example: "https://via.placeholder.com/206x260"
+ *                 year:
+ *                   type: number
+ *                   example: 1925
+ *                 genre:
+ *                   type: string
+ *                   example: "Fiction"
+ *                 ratings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         example: "1"
+ *                       grade:
+ *                         type: number
+ *                         example: 5
+ *                 averageRating:
+ *                   type: number
+ *                   example: 4.5
+ *       403:
+ *         description: Unauthorized request
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Internal server error
+ */
+
 router.put('/:id', upload.single('image'), async (req, res) => {
     const { id } = req.params;
     const image = req.file; // Le fichier image, si présent
@@ -121,6 +425,31 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   });
 
   // Route DELETE pour supprimer un livre
+  /**
+ * @swagger
+ * /api/books/{id}:
+ *   delete:
+ *     summary: Suppression livre
+ *     description: Delete a specific book if the current user is the creator.
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the book to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Book deleted successfully
+ *       403:
+ *         description: Unauthorized request
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Internal server error
+ */
+
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
       const bookId = req.params.id;
@@ -148,44 +477,83 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Route PUT pour ajouter ou mettre à jour la note
+/**
+ * @swagger
+ * /api/books/{id}/rating:
+ *   post:
+ *     summary: Noter un livre
+ *     description: Add a rating to a book if the user hasn't already rated it.
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the book to rate
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "1"
+ *               rating:
+ *                 type: number
+ *                 example: 4
+ *     responses:
+ *       200:
+ *         description: Rating added successfully
+ *       403:
+ *         description: User has already rated this book
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Internal server error
+ */
+
 router.post('/:id/rating', authMiddleware, async (req, res) => {
-  const { id } = req.params;
   const { userId, rating } = req.body;
-
-  console.log('Données reçues:', { userId, rating });
-
-  if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-    return res.status(400).json({ message: 'La note doit être un nombre entre 1 et 5.' });
-  }
+  const bookId = req.params.id;
 
   try {
-    const book = await Book.findById(id);
+    const book = await Book.findById(bookId);
 
     if (!book) {
-      return res.status(404).json({ message: 'Livre non trouvé' });
+      return res.status(404).json({ message: 'Book not found' });
     }
 
-    const existingRatingIndex = book.ratings.findIndex(r => r.userId === userId);
-    
-    if (existingRatingIndex !== -1) {
-      return res.status(400).json({ message: 'Vous avez déjà noté ce livre.' });
+    // Vérifiez si l'utilisateur a déjà noté ce livre
+    const existingRating = book.ratings.find(r => r.userId === userId);
+    if (existingRating) {
+      return res.status(400).json({ message: 'You have already rated this book' });
     }
 
+    // Ajoutez la nouvelle note
     book.ratings.push({ userId, grade: rating });
 
-    const totalRatings = book.ratings.length;
-    const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
-    book.averageRating = sumRatings / totalRatings;
+    // Recalculer la moyenne
+    if (book.ratings.length > 0) {
+      const totalRating = book.ratings.reduce((acc, curr) => acc + curr.grade, 0);
+      console.log('total rating', totalRating);
+      console.log('Book rating', book.ratings.length)
+      book.averageRating = totalRating / book.ratings.length;
+
+    } else {
+      book.averageRating = 0;
+    }
 
     await book.save();
-
-    res.status(200).json(book);
+    res.json(book);
   } catch (error) {
-    console.error('Erreur lors de l\'ajout de la note:', error);
-    res.status(500).json({ message: 'Erreur lors de l\'ajout de la note', error: error.message });
+    res.status(500).json({ message: 'Error updating rating', error: error.message });
   }
 });
+
+
 
 
 module.exports = router;

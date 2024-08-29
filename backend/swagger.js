@@ -3,23 +3,20 @@ const swaggerUi = require('swagger-ui-express');
 
 const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: '3.0.0', // Version OpenAPI
     info: {
-      title: 'API Documentation',
-      version: '1.0.0',
-      description: 'A simple API documentation example using Swagger',
+      title: 'API Mon vieux grimoire', // Titre de l'API
+      version: '1.0.0', // Version de l'API
+      description: 'Mon vieux grimoire',
     },
-    servers: [
-      {
-        url: 'http://localhost:4000', // L'URL API
-      },
-    ],
   },
-  apis: ['./frontend/src/utils/constants.js'], // es chemin vers le fichier contenant vos routes d'API
+  apis: ['.backend/routes/*.js'], // Chemin vers vos fichiers de route
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+const specs = swaggerJsdoc(options);
 
-module.exports = (app) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerDocs = (app) => {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 };
+
+module.exports = swaggerDocs;
