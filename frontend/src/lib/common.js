@@ -100,6 +100,7 @@ export async function rateBook(id, userId, rating) {
   try {
     const response = await axios.post(`${API_ROUTES.BOOKS}/${id}/rating`, data, {
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
     });

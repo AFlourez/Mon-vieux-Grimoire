@@ -1,25 +1,23 @@
-const http = require('http');
-const app = require('./app');
+const express = require('express');
 const mongoose = require('mongoose');
-const swaggerSetup = require('./swagger');
+const path = require('path');
+const app = require('./app'); // Importer l'application Express depuis app.js
+require('dotenv').config(); // Charger les variables d'environnement
 
-swaggerSetup(app);
+// Servir les fichiers statiques depuis le répertoire 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const MONGO_URI = process.env.MONGO_URI;
 
 // Connexion à MongoDB
-mongoose.connect('mongodb+srv://flourezalexis:ojpgTgnpLMDe6ewm@mvg.739qc.mongodb.net/?retryWrites=true&w=majority&appName=MVG', {
+mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => console.log('Connecté à MongoDB'))
 .catch(error => console.error('Erreur de connexion à MongoDB :', error));
 
-const port = process.env.PORT || 4000;
-app.set('port', port);
-
-const server = http.createServer(app);
-
-server.listen(port, () => {
-  console.log(`Serveur démarré sur le port ${port}`);
-  console.log(`Swagger démarré sur le port ${port}`);
+// Lancement du serveur
+app.listen(4000, () => {
+  console.log('Le serveur backend tourne sur le port : 4000');
 });
-
