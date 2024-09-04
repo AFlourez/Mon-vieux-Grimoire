@@ -1,32 +1,25 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const authRoutes = require('./routes/authRoutes'); // Importer les routes d'authentification
-const booksRoutes = require('./routes/booksRoutes'); // Importer les routes des livres
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const path = require('path');
+const cors = require('cors');
+const authRoutes = require('./routes/authRoutes');
+const booksRoutes = require('./routes/booksRoutes');
 require('dotenv').config();
 
 const app = express();
 
 // Configurer CORS pour autoriser les requêtes depuis votre frontend
 app.use(cors({
-  origin: 'http://localhost:3000',  // Remplacez par l'URL de votre frontend
+  origin: 'http://localhost:3000',  // URL de votre frontend
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
 }));
 
-app.options('*', cors()); // Répond à toutes les requêtes OPTIONS avec les headers CORS appropriés
-
-// Middleware pour parser le JSON
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Utiliser les routes
-app.use('/api/auth', authRoutes); // Routes d'authentification
-app.use('/api/books', booksRoutes); // Routes des livres
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Swagger Documentation
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -35,11 +28,29 @@ const options = {
       version: '1.0.0',
       description: 'Mon vieux grimoire',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: ['./routes/*.js'], // Chemin vers vos fichiers de route
+  apis: [path.join(__dirname, 'routes/*.js')],
 };
+
 const specs = swaggerJsdoc(options);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+app.use('/api/auth', authRoutes);
+app.use('/api/books', booksRoutes);
 
 module.exports = app;

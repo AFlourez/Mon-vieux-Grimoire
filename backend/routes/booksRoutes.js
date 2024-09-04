@@ -1,9 +1,11 @@
 const express = require('express');
 const upload = require('../middleware/multer-config'); // Importer la configuration multer
 const authMiddleware = require('../middleware/auth'); // Importer le middleware d'authentification
+const resizeImage = require('../middleware/sharp-config'); // Importer le middleware Sharp
 const Book = require('../models/Book'); // Importer le modèle Book
 
 const router = express.Router();
+
 
 /**
  * @swagger
@@ -12,16 +14,16 @@ const router = express.Router();
  *   description: API pour gérer les livres
  */
 
-// Route POST pour ajouter un livre
 /**
  * @swagger
  * /api/books:
  *   post:
  *     summary: Ajouter un nouveau livre
- *     description: Créer un nouveau livre
+ *     description: Créer un nouveau livre avec une option pour télécharger une image.
  *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -29,56 +31,134 @@ const router = express.Router();
  *             properties:
  *               title:
  *                 type: string
- *                 example: The Great Gatsby
+ *                 example: Silmarillion
  *               author:
  *                 type: string
- *                 example: F. Scott Fitzgerald
+ *                 example: J. R. R. Tolkien
  *               year:
  *                 type: number
- *                 example: 1925
+ *                 example: 1977
  *               genre:
  *                 type: string
- *                 example: Fiction
+ *                 example: Fantasy
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image du livre (au format binaire). Optionnel.
  *               imageUrl:
  *                 type: string
- *                 example: https://via.placeholder.com/206x260
+ *                 example: https://m.media-amazon.com/images/I/91vOYLA7beL._AC_UF1000,1000_QL80_.jpg
+ *                 description: URL de l'image du livre. Optionnel.
+ *               ratings:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       example: "66cc456ffbee660410324fb1"
+ *                     grade:
+ *                       type: number
+ *                       example: 5
+ *                 description: Liste des évaluations pour le livre. Optionnel.
+ *               averageRating: 
+ *                 type: number
+ *                 example: 0
+ *                 description: Note moyenne du livre. Optionnel.
  *     responses:
  *       200:
  *         description: Livre créé avec succès
  *       400:
- *         description: Invalid input
+ *         description: Données invalides ou erreurs de validation
+ *       401:
+ *         description: Non autorisé
+ *       500:
+ *         description: Erreur interne du serveur
  */
-router.post('/', authMiddleware, upload.single('image'), (req, res) => {
+
+// Route POST pour créer un livre
+router.post('/', authMiddleware, upload.single('image'), resizeImage, (req, res) => {
   console.log('Requête reçue:', req.body);
   console.log('Fichier reçu:', req.file);
 
-  let bookData;
-
-  try {
-      // Convertir les données JSON du livre en objet JavaScript
+  // Vérifiez si les données sont encapsulées dans `req.body.book`
+  let bookData = req.body;
+  if (typeof req.body.book === 'string') {
+    try {
       bookData = JSON.parse(req.body.book);
-  } catch (error) {
-      return res.status(400).json({ message: 'Erreur dans les données du livre', error: error.message });
+    } catch (error) {
+      return res.status(400).json({ message: 'Erreur lors de l\'analyse des données du livre.', error: error.message });
+    }
   }
 
-  // Ajouter l'URL de l'image si elle est présente
+  // Extraire les champs requis
+  const { title, author, year, genre, imageUrl, averageRating, ratings } = bookData;
+
+  // Vérifiez les types des champs
+  if (typeof title !== 'string' || typeof author !== 'string' || typeof genre !== 'string') {
+    return res.status(400).json({ message: 'Les champs title, author et genre doivent être des chaînes.' });
+  }
+
+  if (isNaN(year)) {
+    return res.status(400).json({ message: 'Le champ year doit être un nombre.' });
+  }
+
+   // Assurez-vous que ratings est un tableau (si fourni)
+   let parsedRatings = [];
+   if (ratings) {
+     // Si `ratings` est déjà un tableau, utilisez-le directement
+     if (Array.isArray(ratings)) {
+       parsedRatings = ratings;
+     } else {
+       // Sinon, essayez de le convertir en tableau
+       try {
+         parsedRatings = JSON.parse(ratings);
+         if (!Array.isArray(parsedRatings)) {
+           return res.status(400).json({ message: 'Le champ ratings doit être un tableau.' });
+         }
+       } catch (error) {
+         return res.status(400).json({ message: 'Erreur lors de l\'analyse du champ ratings.', error: error.message });
+       }
+     }
+   }
+
+  // Créez un objet bookData
+  let bookDataToSave = {
+    title,
+    author,
+    year: Number(year), // Convertir en nombre si nécessaire
+    genre,
+    ratings: parsedRatings,
+    averageRating: averageRating ? parseFloat(averageRating) : 0,
+  };
+
+  // Traitez l'image si elle est fournie
   if (req.file) {
-      bookData.imageUrl = `/uploads/${req.file.filename}`;
+    bookDataToSave.imageUrl = `/uploads/${req.file.filename}`;
+  } else if (imageUrl) {
+    bookDataToSave.imageUrl = imageUrl;
+  } else {
+    return res.status(400).json({ message: 'Une image doit être fournie via un fichier ou une URL.' });
   }
 
+  // Créez un nouvel objet Book
   const book = new Book({
-      ...bookData,
-      userId: req.userId // Ajoute l'ID de l'utilisateur au livre
+    ...bookDataToSave,
+    userId: req.userId
   });
 
+  // Sauvegardez le livre dans la base de données
   book.save()
-      .then(() => res.status(201).json({ message: 'Livre enregistré !' }))
-      .catch(error => {
-          console.error('Erreur lors de la sauvegarde:', error);
-          res.status(400).json({ error });
-      });
+    .then(result => {
+      res.status(201).json({ message: 'Livre créé avec succès', book: result });
+    })
+    .catch(err => {
+      res.status(500).json({ message: 'Erreur lors de la création du livre', error: err.message });
+    });
 });
-  
+
+
+
 
 // Route GET pour récupérer tous les livres
 /**
@@ -280,7 +360,7 @@ router.get('/bestrating', async (req, res) => {
  */
 
 router.get('/:id', (req, res) => {
-  console.log('ID demandé:', req.params.id);
+  console.log('ID du livre demandé:', req.params.id);
   Book.findOne({ _id: req.params.id })
     .then(book => {
       if (book) {
@@ -300,6 +380,8 @@ router.get('/:id', (req, res) => {
  *     summary: MAJ livre
  *     description: Update the details of a book if the current user is the creator.
  *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -432,6 +514,8 @@ router.put('/:id', upload.single('image'), async (req, res) => {
  *     summary: Suppression livre
  *     description: Delete a specific book if the current user is the creator.
  *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -484,6 +568,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
  *     summary: Noter un livre
  *     description: Add a rating to a book if the user hasn't already rated it.
  *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

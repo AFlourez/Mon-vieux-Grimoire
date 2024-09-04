@@ -1,11 +1,7 @@
-const express = require('express');
 const mongoose = require('mongoose');
-const path = require('path');
 const app = require('./app'); // Importer l'application Express depuis app.js
 require('dotenv').config(); // Charger les variables d'environnement
 
-// Servir les fichiers statiques depuis le répertoire 'uploads'
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const MONGO_URI = process.env.MONGO_URI;
 
