@@ -463,49 +463,49 @@ router.get('/:id', (req, res) => {
  *         description: Internal server error
  */
 
-router.put('/:id', upload.single('image'), async (req, res) => {
-    const { id } = req.params;
-    const image = req.file; // Le fichier image, si présent
+router.put('/:id', authMiddleware, upload.single('image'), resizeImage, async (req, res) => {
+  const { id } = req.params;
+  const image = req.file; // Le fichier image, si présent
   
-    console.log('ID:', id);
-    console.log('Fichier reçu:', image);
-    console.log('Corps de la requête:', req.body);
+  console.log('ID:', id);
+  console.log('Fichier reçu:', image);
+  console.log('Corps de la requête:', req.body);
+  
+  try {
+    const updateFields = {};
     
-    try {
-      const updateFields = {};
-  
-      // Si une image est téléchargée, mettre à jour le champ imageUrl
-      if (image) {
-        updateFields.imageUrl = `/uploads/${image.filename}`;
-      }
-  
-      // Mettre à jour les champs du livre
-      if (req.body.book) {
-        const bookData = JSON.parse(req.body.book);
-        Object.assign(updateFields, bookData);
-      } else {
-        const { title, author, year, genre, ratings, averageRating } = req.body;
-        if (title) updateFields.title = title;
-        if (author) updateFields.author = author;
-        if (year) updateFields.year = year;
-        if (genre) updateFields.genre = genre;
-        if (ratings) updateFields.ratings = ratings;
-        if (averageRating) updateFields.averageRating = averageRating;
-      }
-  
-      // Mettre à jour le livre dans la base de données
-      const updatedBook = await Book.findByIdAndUpdate(id, updateFields, { new: true });
-  
-      if (!updatedBook) {
-        return res.status(404).json({ message: 'Livre non trouvé' });
-      }
-  
-      res.status(200).json({ message: 'Livre mis à jour avec succès', updatedBook });
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du livre:', error.message);
-      res.status(500).json({ message: 'Erreur lors de la mise à jour du livre', error: error.message });
+    // Si une image est téléchargée et redimensionnée, mettre à jour le champ imageUrl
+    if (image) {
+      updateFields.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
-  });
+    
+    // Mettre à jour les champs du livre
+    if (req.body.book) {
+      const bookData = JSON.parse(req.body.book);
+      Object.assign(updateFields, bookData);
+    } else {
+      const { title, author, year, genre, ratings, averageRating } = req.body;
+      if (title) updateFields.title = title;
+      if (author) updateFields.author = author;
+      if (year) updateFields.year = year;
+      if (genre) updateFields.genre = genre;
+      if (ratings) updateFields.ratings = ratings;
+      if (averageRating) updateFields.averageRating = averageRating;
+    }
+    
+    // Mettre à jour le livre dans la base de données
+    const updatedBook = await Book.findByIdAndUpdate(id, updateFields, { new: true });
+    
+    if (!updatedBook) {
+      return res.status(404).json({ message: 'Livre non trouvé' });
+    }
+    
+    res.status(200).json({ message: 'Livre mis à jour avec succès', updatedBook });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du livre:', error.message);
+    res.status(500).json({ message: 'Erreur lors de la mise à jour du livre', error: error.message });
+  }
+});
 
   // Route DELETE pour supprimer un livre
   /**

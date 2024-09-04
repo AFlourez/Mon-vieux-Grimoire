@@ -85,10 +85,10 @@ router.post('/signup', async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
- *                 example: "test@example.com"
+ *                 example: "babas@babas.fr"
  *               password:
  *                 type: string
- *                 example: "monSuperMotDePasse"
+ *                 example: "babas"
  *     responses:
  *       200:
  *         description: Connexion réussie, jeton d'accès renvoyé
