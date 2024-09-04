@@ -103,30 +103,28 @@ router.post('/', authMiddleware, upload.single('image'), resizeImage, (req, res)
     return res.status(400).json({ message: 'Le champ year doit être un nombre.' });
   }
 
-   // Assurez-vous que ratings est un tableau (si fourni)
-   let parsedRatings = [];
-   if (ratings) {
-     // Si `ratings` est déjà un tableau, utilisez-le directement
-     if (Array.isArray(ratings)) {
-       parsedRatings = ratings;
-     } else {
-       // Sinon, essayez de le convertir en tableau
-       try {
-         parsedRatings = JSON.parse(ratings);
-         if (!Array.isArray(parsedRatings)) {
-           return res.status(400).json({ message: 'Le champ ratings doit être un tableau.' });
-         }
-       } catch (error) {
-         return res.status(400).json({ message: 'Erreur lors de l\'analyse du champ ratings.', error: error.message });
-       }
-     }
-   }
+  // Assurez-vous que ratings est un tableau (si fourni)
+  let parsedRatings = [];
+  if (ratings) {
+    if (Array.isArray(ratings)) {
+      parsedRatings = ratings;
+    } else {
+      try {
+        parsedRatings = JSON.parse(ratings);
+        if (!Array.isArray(parsedRatings)) {
+          return res.status(400).json({ message: 'Le champ ratings doit être un tableau.' });
+        }
+      } catch (error) {
+        return res.status(400).json({ message: 'Erreur lors de l\'analyse du champ ratings.', error: error.message });
+      }
+    }
+  }
 
   // Créez un objet bookData
   let bookDataToSave = {
     title,
     author,
-    year: Number(year), // Convertir en nombre si nécessaire
+    year: Number(year),
     genre,
     ratings: parsedRatings,
     averageRating: averageRating ? parseFloat(averageRating) : 0,
@@ -134,8 +132,10 @@ router.post('/', authMiddleware, upload.single('image'), resizeImage, (req, res)
 
   // Traitez l'image si elle est fournie
   if (req.file) {
-    bookDataToSave.imageUrl = `/uploads/${req.file.filename}`;
+    // Construire l'URL complète de l'image
+    bookDataToSave.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   } else if (imageUrl) {
+    // Si l'image est fournie via une URL
     bookDataToSave.imageUrl = imageUrl;
   } else {
     return res.status(400).json({ message: 'Une image doit être fournie via un fichier ou une URL.' });
@@ -156,6 +156,7 @@ router.post('/', authMiddleware, upload.single('image'), resizeImage, (req, res)
       res.status(500).json({ message: 'Erreur lors de la création du livre', error: err.message });
     });
 });
+
 
 
 

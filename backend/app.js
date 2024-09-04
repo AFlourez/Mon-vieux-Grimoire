@@ -1,3 +1,4 @@
+// Requiring modules
 const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -7,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const booksRoutes = require('./routes/booksRoutes');
 require('dotenv').config();
 
+// Creating express object
 const app = express();
 
 // Configurer CORS pour autoriser les requêtes depuis votre frontend
@@ -18,6 +20,7 @@ app.use(cors({
 
 app.use(express.json());
 
+// Serving files from 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const options = {
