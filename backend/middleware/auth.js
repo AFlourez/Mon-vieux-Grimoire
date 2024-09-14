@@ -11,11 +11,9 @@ module.exports = (req, res, next) => {
 
     // Extrait le token
     const token = authHeader.split(' ')[1];
-    console.log('Token reçu:', token);
 
     // Vérifie et décode le token
     const decodedToken = jwt.verify(token, JWT_SECRET);
-    console.log('ID utilisateur décodé:', decodedToken.userId);
 
     // Ajoute l'ID de l'utilisateur au requête
     req.userId = decodedToken.userId;

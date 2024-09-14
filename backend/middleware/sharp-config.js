@@ -4,15 +4,12 @@ const fs = require('fs');
 
 const resizeImage = async (req, res, next) => {
   if (!req.file) {
-    console.log('Aucun fichier reçu.');
     return next();
   }
 
   const filePath = path.join(__dirname, '../uploads', req.file.filename);
   const outputFilePath = path.join(__dirname, '../uploads', 'resized-' + path.parse(req.file.filename).name + '.webp');
 
-  console.log('Chemin du fichier original:', filePath);
-  console.log('Chemin du fichier redimensionné:', outputFilePath);
 
   try {
     await sharp(filePath)

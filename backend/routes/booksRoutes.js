@@ -78,10 +78,6 @@ const router = express.Router();
 
 // Route POST pour créer un livre
 router.post('/', authMiddleware, upload.single('image'), resizeImage, (req, res) => {
-  console.log('Requête reçue:', req.body);
-  console.log('Fichier reçu:', req.file);
-
-  // Vérifiez si les données sont encapsulées dans `req.body.book`
   let bookData = req.body;
   if (typeof req.body.book === 'string') {
     try {
@@ -361,7 +357,6 @@ router.get('/bestrating', async (req, res) => {
  */
 
 router.get('/:id', (req, res) => {
-  console.log('ID du livre demandé:', req.params.id);
   Book.findOne({ _id: req.params.id })
     .then(book => {
       if (book) {
@@ -466,10 +461,6 @@ router.get('/:id', (req, res) => {
 router.put('/:id', authMiddleware, upload.single('image'), resizeImage, async (req, res) => {
   const { id } = req.params;
   const image = req.file; // Le fichier image, si présent
-  
-  console.log('ID:', id);
-  console.log('Fichier reçu:', image);
-  console.log('Corps de la requête:', req.body);
   
   try {
     const updateFields = {};
@@ -625,8 +616,6 @@ router.post('/:id/rating', authMiddleware, async (req, res) => {
     // Recalculer la moyenne
     if (book.ratings.length > 0) {
       const totalRating = book.ratings.reduce((acc, curr) => acc + curr.grade, 0);
-      console.log('total rating', totalRating);
-      console.log('Book rating', book.ratings.length)
       book.averageRating = totalRating / book.ratings.length;
 
     } else {

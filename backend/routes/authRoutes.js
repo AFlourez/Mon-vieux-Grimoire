@@ -5,7 +5,7 @@ const User = require('../models/User'); // Importer le modèle User
 
 const router = express.Router();
 
-const JWT_SECRET = 'your_jwt_secret_key'; // Change cela pour une clé plus sécurisée en production
+const JWT_SECRET = 'your_jwt_secret_key'; 
 
 // Route POST pour l'inscription
 /**
@@ -110,19 +110,16 @@ router.post('/login', async (req, res) => {
 
   try {
     if (!email || !password) {
-      console.log('Email ou mot de passe manquant');
       return res.status(400).json({ message: 'Email et mot de passe requis' });
     }
 
     const user = await User.findOne({ email: email });
     if (!user) {
-      console.log('Utilisateur non trouvé');
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      console.log('Mot de passe incorrect');
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
 
@@ -136,7 +133,6 @@ router.post('/login', async (req, res) => {
       userId: user._id,
       token: token,
     });
-    console.log('Connexion réussie')
 
   } catch (error) {
     console.error('Erreur lors de la connexion:', error);
